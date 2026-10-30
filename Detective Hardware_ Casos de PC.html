@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Detective Hardware: Casos de PC</title>
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--tx:#1d1d1f;--mu:#666;--ac:#b4442b;--ok:#2e7d4f;--bad:#c0392b;--bd:#ddd5c4;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16181d;--card:#22262e;--tx:#ececec;--mu:#9aa0aa;--ac:#e8785c;--ok:#5bc08a;--bad:#ff7a6b;--bd:#363b46}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:21px;margin:0 0 4px}h2{font-size:18px;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin:12px 0}
+.mu{color:var(--mu);font-size:14px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{font:inherit;color:inherit;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;text-align:left;cursor:pointer;width:100%}
+button:hover{border-color:var(--ac)}
+.pri{background:var(--ac);color:#fff;border:0;text-align:center;font-weight:600;margin-top:8px}
+.ok{border-color:var(--ok)!important}.bad{border-color:var(--bad)!important}
+.opt{margin:8px 0}
+.note{border-left:4px solid var(--ac);padding-left:10px;margin:10px 0}
+.bar{height:6px;border-radius:9px;background:var(--bd);margin:6px 0 12px}.bar i{display:block;height:100%;border-radius:9px;background:var(--ac)}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+// Formato sospechoso: [nombre, icono, pista, pregunta, [opciones], correcta, explicación]
+const C=[
+{t:"Caso 1. El reloj fugitivo",s:"Placa base",h:"El PC no arranca a la primera y la hora vuelve siempre al 1 de enero.",g:0,
+v:"La pila CMOS está agotada: sin energía, la configuración de la BIOS y el reloj se pierden. La BIOS y el socket están bien.",
+p:[["Pila CMOS","🔋","El multímetro marca 0,8 V en lugar de unos 3 V. Al desenchufar el equipo, la BIOS lo olvida todo.","¿Para qué sirve la pila de la placa base?",["Alimentar los ventiladores apagado","Mantener la configuración y el reloj sin corriente","Cargar la fuente de alimentación"],1,"La CMOS necesita energía constante para recordar la configuración y la hora."],
+["Chip BIOS","💽","El chip es una EEPROM (Flash BIOS) y conserva el firmware sin problemas.","¿Qué tipo de memoria es la ROM de la BIOS?",["Volátil, como la RAM","No volátil: conserva datos sin energía","Se borra siempre con luz ultravioleta"],1,"La ROM es no volátil. La EEPROM se borra eléctricamente (Flash BIOS); la EPROM, con luz UV."],
+["Socket de CPU","🧩","El procesador está soldado a la placa y no se puede cambiar.","¿Qué caracteriza a un encapsulado BGA?",["Se cambia fácilmente","Va soldado a la placa (típico de portátiles)","Lleva pines en el procesador"],1,"BGA conecta con bolas de soldadura. PGA lleva pines en la CPU; LGA, contactos planos y los pines en la placa."]]},
+{t:"Caso 2. Se apaga en plena partida",s:"Fuente de alimentación",h:"Un PC gaming se apaga a los 10 minutos de jugar. Sin juegos aguanta días.",g:0,
+v:"La fuente de 500 W no soporta un consumo de unos 600 W en juego y se apaga. Refrigeración y RAM están bien.",
+p:[["Fuente 500 W","🔌","Etiqueta de 500 W. En juego, CPU y gráfica consumen de media 600 W.","¿Qué ocurre si el PC pide más potencia de la que da la fuente?",["Se ralentiza suavemente","Se apaga (y una de mala calidad puede dañarse)","La fuente aumenta su potencia"],1,"Los vatios son el máximo que la fuente puede dar. Si se supera, se apaga."],
+["Refrigeración","❄️","CPU a 62 °C bajo carga, pasta térmica reciente.","¿Para qué sirve la pasta térmica?",["Pegar la CPU al socket","Rellenar irregularidades y mover el calor al disipador","Aislar eléctricamente"],1,"Es el intermediario con alta conductividad térmica entre CPU y disipador."],
+["Memoria RAM","🧠","DDR4 en módulos DIMM, sin errores.","¿Cuántos contactos tiene un DIMM DDR4?",["240","288","184"],1,"DDR4 y DDR5 usan 288 contactos; DDR2 y DDR3, 240; DDR, 184."]]},
+{t:"Caso 3. La factura de la luz",s:"Fuente de alimentación",h:"Una pyme con 40 equipos nota que su consumo eléctrico se ha disparado.",g:0,
+v:"Fuentes sin certificación 80 Plus y con PFC pasivo desperdician energía. Con 80 Plus se ahorra dinero a largo plazo.",
+p:[["Fuentes sin 80 Plus","💸","Eficiencia medida: 65 %, PFC pasivo.","¿Qué asegura la certificación 80 Plus?",["Una eficiencia mínima del 80 % en pruebas de carga","Que la fuente da 80 W","Que dura 80.000 horas"],0,"Se prueba al 10, 20, 50 y 100 % de carga. Para muchos equipos supone ahorro."],
+["Rectificador","🔁","Transformación, rectificación, filtrado y estabilización funcionan.","¿Qué hace la etapa de rectificación?",["Baja la tensión","Convierte corriente alterna en continua","Elimina fluctuaciones"],1,"Transformar reduce la tensión; rectificar pasa a continua; filtrar elimina rizado; estabilizar fija la salida."],
+["Puertos USB","🔗","Todos los USB funcionan con normalidad.","¿A qué voltaje funcionan los puertos USB?",["+3,3 V","+5 V","+12 V"],1,"USB y discos duros mecánicos usan +5 V; RAM y M.2, +3,3 V; CPU y gráfica, +12 V."]]},
+{t:"Caso 4. El PC se cuece",s:"Chasis y refrigeración",h:"Un PC nuevo en una caja cerrada llega a 90 °C en reposo.",g:0,
+v:"Solo hay ventilador de extracción y los filtros están llenos: no entra aire fresco y se acumula el calor.",
+p:[["Flujo de aire","🌬️","Un ventilador frontal en extracción y ninguna entrada de aire.","¿Hacia dónde tiende a ir el aire caliente en el chasis?",["Hacia abajo","Hacia el techo, porque pesa menos que el frío","Hacia los lados"],1,"Por eso el flujo vertical recomienda entrada abajo y salida arriba."],
+["Fuente de alimentación","🔌","Su ventilador gira correctamente.","Si no hay ventilador trasero, la fuente es…",["La única salida de aire","Innecesaria para ventilar","Solo para el ruido"],0,"Un ventilador defectuoso en la fuente puede llevar al fallo general."],
+["Placa base ATX","🧱","Placa ATX instalada en una media torre.","¿Qué placas admite una media torre?",["Mini-ITX, MicroATX y ATX","Solo EATX","Solo Mini-ITX"],0,"Media torre: de 45 a 60 cm, 7 u 8 ranuras. La torre admite también EATX."]]},
+{t:"Caso 5. Overclocking fallido",s:"Microprocesador",h:"Un cliente subió la frecuencia de su CPU y ahora el PC va lento y se reinicia.",g:0,
+v:"Overclocking con disipador de serie: la CPU se calienta, aplica thermal throttling y la placa corta la corriente.",
+p:[["Overclock","🔥","Multiplicador subido, voltaje alto, disipador de serie, 95 °C.","¿Qué es el thermal throttling?",["La CPU baja su frecuencia para enfriarse","Un tipo de caché","Subir el voltaje"],0,"La CPU limita su rendimiento para protegerse; la placa puede cortar la corriente."],
+["Memoria caché","⚡","L1 de 32 KB, L2 de 256 KB y L3 compartida.","¿En qué orden busca la CPU un dato?",["L1, L2, L3, RAM y disco","RAM, L1 y disco","Disco, RAM y L3"],0,"Va de la más rápida y pequeña a la más lenta y grande."],
+["TDP","🌡️","TDP de 90 W; a plena carga consume 120 W.","¿El TDP es lo mismo que el consumo eléctrico?",["Sí","No: es el calor máximo a disipar","Es la frecuencia"],1,"Se miden en vatios, pero el TDP indica el calor a disipar."]]},
+{t:"Caso 6. La memoria que se esfuma",s:"Memoria principal",h:"Se fue la luz y el usuario perdió el documento que no había guardado.",g:0,
+v:"La RAM es volátil: sin energía pierde todo. La ROM y la caché no son responsables.",
+p:[["Memoria RAM","🧠","El documento estaba solo cargado en la memoria principal.","¿Por qué la RAM pierde los datos?",["Es volátil: necesita energía eléctrica","Es muy lenta","Es solo de lectura"],0,"Un programa debe estar en RAM para ejecutarse, pero al apagar se borra."],
+["Memoria ROM","📜","La BIOS mantuvo el firmware tras el apagón.","¿Qué significa que la ROM sea no volátil?",["Pierde datos al apagar","Conserva datos sin energía","Solo se escribe una vez siempre"],1,"PROM se graba una vez, EPROM se borra con luz UV y EEPROM, eléctricamente."],
+["Caché","⚡","La caché usa SRAM, rápida y cara.","¿Qué memoria suele usar SRAM?",["La caché","La RAM principal","El disco"],0,"SRAM no necesita refresco; DRAM sí, y es más barata para la memoria principal."]]},
+{t:"Caso 7. El disco que traquetea",s:"Almacenamiento",h:"Un PC tarda tres minutos en arrancar y se oye un ruido constante.",g:0,
+v:"Un HDD mecánico y fragmentado tiene tiempos de acceso de milisegundos. Un SSD NVMe resolvería el problema.",
+p:[["HDD 7200 rpm","💿","Tiempo de acceso de 12 ms y archivos muy fragmentados.","¿Cómo se calcula el tiempo de acceso?",["Tiempo de búsqueda medio + latencia media","Velocidad de transferencia + búfer","Número de platos × rpm"],0,"Búsqueda: mover el cabezal a la pista. Latencia: esperar al sector."],
+["SSD NVMe","💾","M.2 PCIe 4.0 x4: 7876 MB/s teóricos.","¿Cuál es la unidad mínima de borrado en un SSD?",["La página","El bloque","El sector de 512 bytes"],1,"Se escribe por páginas, pero solo se borra un bloque entero. Por eso existe TRIM."],
+["DVD rayado","📀","Una unidad óptica con arañazos.","¿Cómo lee el láser un disco óptico?",["Distingue pits y lands por la luz reflejada","Detecta campos magnéticos","Mide cargas en transistores"],0,"Un pit refleja poca luz y un land mucha; los ceros y unos salen de ahí."]]},
+{t:"Caso 8. Datos desaparecidos",s:"RAID y almacenamiento en red",h:"Una empresa guardaba copias en dos discos y, al morir uno, lo perdió todo.",g:0,
+v:"Era un RAID 0: reparte datos sin redundancia. Con RAID 1 o 5 habrían sobrevivido a la avería de un disco.",
+p:[["RAID 0","⛓️","Dos discos en conjunto dividido. Falló uno.","¿Hay redundancia de datos en RAID 0?",["No","Sí, en espejo","Sí, con paridad"],0,"RAID 0 suma capacidad y velocidad, pero no tolera fallos."],
+["RAID 1","🪞","Dos discos de 1 TB en espejo.","¿Qué capacidad útil da RAID 1 con dos discos de 1 TB?",["2 TB","1 TB","0,5 TB"],1,"RAID 1 copia todo en ambos discos: la capacidad es la de uno solo."],
+["NAS","🌐","Un equipo conectado al router con su propio sistema operativo.","¿Cómo se conecta un NAS?",["Directamente a un servidor con SATA","A la red mediante TCP/IP","Solo por fibra óptica"],1,"DAS va conectado a un servidor; NAS, a la red; SAN es la opción profesional con controladora."]]}
+];
+let S={i:0,r:3,seen:{},cur:null,pts:0};
+const $=document.getElementById("app");
+const H=()=>"❤️".repeat(S.r)+"🖤".repeat(3-S.r);
+function bar(){return `<div class="bar"><i style="width:${S.i/C.length*100}%"></i></div>`}
+function menu(){const c=C[S.i];
+$.innerHTML=`<div class="top"><h1>🕵️ ${c.t}</h1><span>${H()}</span></div>${bar()}
+<div class="card"><span class="mu">Tema: ${c.s}</span><p>${c.h}</p><p class="mu">Inspecciona a los sospechosos, interpreta bien las pruebas y señala al culpable. Cada error de interpretación cuesta reputación.</p></div>
+<div class="grid">${c.p.map((x,k)=>{const d=S.seen[k];return `<button onclick="insp(${k})" class="${d||""}">${x[1]} ${x[0]}<br><span class="mu">${d==="ok"?"prueba confirmada":d==="bad"?"prueba dudosa":"inspeccionar"}</span></button>`}).join("")}</div>
+<div class="card"><h2>Libreta</h2>${Object.keys(S.seen).length?Object.keys(S.seen).map(k=>`<div class="note"><b>${c.p[k][0]}:</b> ${c.p[k][2]}</div>`).join(""):'<span class="mu">Todavía vacía.</span>'}</div>
+<button class="pri" onclick="acusar()">Acusar al culpable</button>`}
+function insp(k){S.cur=k;const x=C[S.i].p[k];
+$.innerHTML=`<div class="top"><h1>${x[1]} ${x[0]}</h1><span>${H()}</span></div>
+<div class="card"><div class="note">${x[2]}</div><h2>${x[3]}</h2>${x[4].map((t,j)=>`<div class="opt"><button onclick="resp(${j})">${t}</button></div>`).join("")}</div>`}
+function resp(j){const k=S.cur,x=C[S.i].p[k],ok=j===x[5];
+if(S.seen[k]==null){S.seen[k]=ok?"ok":"bad";if(ok)S.pts++;else S.r--}
+$.innerHTML=`<div class="card ${ok?"ok":"bad"}"><h2>${ok?"¡Correcto! ✅":"Fallaste ❌"}</h2><p>${x[6]}</p></div>
+<button class="pri" onclick="${S.r<=0?"perder()":"menu()"}">${S.r<=0?"Continuar":"Volver al caso"}</button>`}
+function acusar(){const c=C[S.i];
+$.innerHTML=`<h1>¿Quién es el culpable?</h1><div class="grid">${c.p.map((x,k)=>`<button onclick="fin(${k})">${x[1]} ${x[0]}</button>`).join("")}</div>`}
+function fin(k){const c=C[S.i],ok=k===c.g,last=S.i===C.length-1;
+if(!ok)S.r--;else S.pts++;
+$.innerHTML=`<div class="card ${ok?"ok":"bad"}"><h2>${ok?"¡Caso resuelto! 🎉":"Acusación errónea 😬"}</h2><p>${ok?"":"El culpable era: <b>"+c.p[c.g][0]+"</b>. "}${c.v}</p><p class="mu">Reputación: ${H()} · Puntos: ${S.pts}</p></div>
+${S.r<=0?'<button class="pri" onclick="perder()">Continuar</button>':last?'<button class="pri" onclick="fina()">Ver resultado final</button>':'<button class="pri" onclick="sig()">Siguiente caso</button>'}`}
+function sig(){S.i++;S.r=3;S.seen={};menu()}
+function perder(){$.innerHTML=`<div class="card bad"><h2>Reputación arruinada 💔</h2><p>Los clientes se han ido a la competencia. Repasa la teoría e inténtalo de nuevo.</p></div><button class="pri" onclick="S.r=3;S.seen={};menu()">Reintentar este caso</button>`}
+function fina(){$.innerHTML=`<div class="card ok"><h2>🏆 ¡Todos los casos resueltos!</h2><p>Puntos: ${S.pts} de ${C.length*4}.</p></div><button class="pri" onclick="S={i:0,r:3,seen:{},cur:null,pts:0};menu()">Jugar otra vez</button>`}
+menu();
+</script>
+</body>
+</html>
